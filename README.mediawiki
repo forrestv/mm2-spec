@@ -41,16 +41,18 @@ burden on auxiliary blockchains.
 H(x) is the standard double-SHA-256 hash function used by Bitcoin.
 Ha(x) and Hb(s, y) are defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
 producing an SHA-256 midstate augmented with the number of blocks processed
-and less than a block-length of unprocessed data, and Hb(s, x) finalizing the
+and less than a block-length of unprocessed data and Hb(s, x) finalizing the
 SHA-256 hash of the data compressed into s concatenated with x and then
 SHA-256 hashing it again to yield H(x || y).
 
 The parent block contains a "reference hash" within the scriptPubkey of the
-last txout of its coinbase transaction. The scriptPubkey must be exactly:
+last txout of its coinbase transaction.
+The scriptPubkey must be exactly:
 
     OP_RETURN (binary tree root hash || last txout nonce)
 
 which serializes to 42 bytes:
+(x is the binary tree root hash, y is the last txout nonce)
 
     6a28xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyy
 
@@ -58,17 +60,20 @@ The "last txout nonce" is a freely chosen 64-bit number, which is useful as a
 nonce for Stratum mining.
 
 The serialized coinbase transaction ends with the last txout's scriptPubKey
-and then nLockTime, a 32-bit number. XXX is nLockTime always 0?
+and then nLockTime, a 32-bit number.
+XXX is nLockTime always 0?
 
 In order to achieve PoW uniqueness, a binary tree with leaf nodes being
-the H(0x01 || H(auxiliary data)) and non-leaf nodes being
-H(0x00 || left || right) is used to compute the binary tree root hash. The
-tree has the requirement that path to a leaf node must be a prefix of a
+the H((64 0x00 bytes) || H(auxiliary data)) and non-leaf nodes being
+H(left || right) is used to compute the binary tree root hash.
+The tree has the requirement that path to a leaf node must be a prefix of a
 predetermined choice of path for the category of auxiliary data that the leaf
-contains. For example, H("namecoin"), represented as a bit sequence with 0
-meaning left and 1 meaning right, might be used for the mandatory path prefix
-of Namecoin blocks. This requirement ensures that multiple instances of a
-particular category of auxiliary data can not be within the same tree.
+contains.
+For example, H("namecoin"), represented as a bit sequence with 0 meaning left
+and 1 meaning right, might be used for the mandatory path prefix of Namecoin
+blocks.
+This requirement ensures that multiple instances of a particular category of
+auxiliary data can not be within the same tree.
 
 ==Rationale==
 

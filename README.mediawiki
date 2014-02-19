@@ -9,17 +9,16 @@
 
 ==Abstract==
 
-This BIP-to-be proposes a new standard for merged mining, consisting of the
-format of data included in the parent chain's coinbase transaction, the format
-of an auxiliary proof-of-work, and procedures to generate and validate these
-proofs.
+This BIP proposes a new standard for merged mining, consisting of the format
+of data included in the parent chain's coinbase transaction, the format of an
+auxiliary proof-of-work, and procedures to generate and validate these proofs.
 
 Of particular interest is the requirement that only one piece of auxiliary
 data per category of auxiliary data (e.g. one auxiliary block per auxiliary
 chain) can have a valid auxiliary proof-of-work derived from a single parent
 proof-of-work (this concept is hereby referred to as "PoW uniqueness").
 Ensuring PoW uniqueness is important in many situations because it prevents an
-unbounded number auxiliary proof-of-works being created from one parent
+unbounded number of auxiliary proof-of-works being created from one parent
 proof-of-work, which in many situations would enable at least a denial of
 service attack.
 

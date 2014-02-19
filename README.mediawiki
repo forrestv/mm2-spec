@@ -14,14 +14,22 @@ format of data included in the parent chain's coinbase transaction, the format
 of an auxiliary proof-of-work, and procedures to generate and validate these
 proofs.
 
+Of particular interest is the requirement that only one piece of auxiliary
+data per category of auxiliary data (e.g. one auxiliary block per auxiliary
+chain) can have a valid auxiliary proof-of-work derived from a single parent
+proof-of-work (this concept is hereby referred to as "PoW uniqueness").
+Ensuring PoW uniqueness is important in many situations because it prevents an
+unbounded number auxiliary proof-of-works being created from one parent
+proof-of-work, which in many situations would enable at least a denial of
+service attack.
+
 ==Motivation==
 
-As it stands, the current implementation of merged mining (hereby refered to
+As it stands, the current implementation of merged mining (hereby referred to
 as MM1) requires the entire relevant coinbase transaction from the parent
 chain to be contained within the auxiliary proof-of-work.
-In addition, MM1's method of ensuring uniqueness of auxiliary proof-of-works
-is complex and space-inefficient due to flaws in its merkle tree slot
-selection algorithm.
+In addition, MM1's method of ensuring PoW uniqueness is complex and
+space-inefficient due to flaws in its merkle tree slot selection algorithm.
 
 This MM2 specification produces markedly shorter auxiliary proof-of-works,
 making applications such as P2Pool possible, while reducing the burden on
@@ -33,21 +41,33 @@ H(x) is the standard double-SHA-256 hash function used by Bitcoin.
 Ha(x) and Hb(s, y) are defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
 producing an SHA-256 midstate augmented with the number of blocks processed
 and less than a block-length of unprocessed data, and Hb(s, x) finalizing the
-SHA-256 hash of the data compressed into s concatenated with x, and then
-hashing it again to yield x || y's double-SHA-256 hash.
+SHA-256 hash of the data compressed into s concatenated with x and then
+SHA-256 hashing it again to yield H(x || y).
 
-Ensuring a 1-to-1 mapping from a (parent proof-of-work, unique identifier)
-pair to an auxiliary proof-of-work is important in many situations because it
-prevents an unbounded number of auxiliary data hashes having an auxiliary
-proof-of-work created from one parent proof-of-work.
+The parent block contains a "reference hash" within the scriptPubkey of the
+last txout of its coinbase transaction. The scriptPubkey must be exactly:
 
-(need a better name for uniqueness/1-to-1ness...)
+    OP_RETURN (binary tree root hash || last txout nonce)
 
-Auxiliary data hash (e.g. auxiliary block hash)
-Parent ref hash = 
-Parent coinbase transaction hash
-Parent merkle root = 
-Parent block hash = H(min_header with Parent merkle root inserted)
+which serializes to 42 bytes:
+
+    6a28xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyy
+
+The "last txout nonce" is a freely chosen 64-bit number, which is useful as a
+nonce for Stratum mining.
+
+The serialized coinbase transaction ends with the last txout's scriptPubKey
+and then nLockTime, a 32-bit number. XXX is nLockTime always 0?
+
+In order to achieve PoW uniqueness, a binary tree with leaf nodes being
+the H(0x01 || H(auxiliary data)) and non-leaf nodes being
+H(0x00 || left || right) is used to compute the binary tree root hash. The
+tree has the requirement that path to a leaf node must be a prefix of a
+predetermined choice of path for the category of auxiliary data that the leaf
+contains. For example, H("namecoin"), represented as a bit sequence with 0
+meaning left and 1 meaning right, might be used for the mandatory path prefix
+of Namecoin blocks. This requirement ensures that multiple instances of a
+particular category of auxiliary data can not be within the same tree.
 
 ==Rationale==
 

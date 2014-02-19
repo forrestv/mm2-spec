@@ -32,8 +32,9 @@ In addition, MM1's method of ensuring PoW uniqueness is complex and
 space-inefficient due to flaws in its merkle tree slot selection algorithm.
 
 This MM2 specification produces markedly shorter auxiliary proof-of-works,
-making applications such as P2Pool possible, while reducing the burden on
-auxiliary blockchains.
+making applications such as [https://github.com/forrestv/p2pool P2Pool] and
+[https://github.com/goblin/chronobit ChronoBit] possible, while reducing the
+burden on auxiliary blockchains.
 
 ==Specification==
 

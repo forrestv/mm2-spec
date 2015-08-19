@@ -1,10 +1,10 @@
 <pre>
-  BIP: (number unassigned)
-  Title: Merged Mining 2 Specification
-  Author: Forrest Voight <forrest.voight@gmail.com>
-  Status: Draft
-  Type: Standards Track
-  Created: 19-2-2014
+BIP: (number unassigned)
+Title: Merged Mining 2 Specification
+Author: Forrest Voight <forrest.voight@gmail.com>
+Status: Draft
+Type: Standards Track
+Created: 19-2-2014
 </pre>
 
 ==Abstract==
@@ -60,7 +60,6 @@ nonce for Stratum mining.
 
 The serialized coinbase transaction ends with the last txout's scriptPubKey
 and then nLockTime, a 32-bit number.
-XXX is nLockTime always 0?
 
 In order to achieve PoW uniqueness, a binary tree with leaf nodes being
 the H((64 0x00 bytes) || H(auxiliary data)) and non-leaf nodes being
@@ -73,6 +72,33 @@ and 1 meaning right, might be used for the mandatory path prefix of Namecoin
 blocks.
 This requirement ensures that multiple instances of a particular category of
 auxiliary data can not be within the same tree.
+
+===Pseudocode===
+
+A "hash link" is the result of the earlier defined Ha(x) function. Using a hash link, one can compute the double-SHA256 hash of a block of data from the portion of it that wasn't input to Ha(x).
+
+A "merkle link" is a list of sibling hashes and a bit for each describing which side they're on. Using a merkle link, one can compute the merkle root of a tree from the hash of a given leaf node.
+
+<pre>
+def verify_mm2_pow_proof(
+        target, pow_category_hash,
+        parent_block_header_without_merkle_root, parent_merkle_link, parent_generation_transaction_hash_link,
+        mm2_merkle_link, auxiliary_data_hash,
+        last_txout_nonce):
+    
+    if not mm2_merkle_link.side_choices.is_prefix_of(pow_category_hash):
+        return False
+    
+    mm2_root_hash = execute_merkle_link(mm2_merkle_link, auxiliary_data_hash)
+    
+    parent_generation_transaction_hash = execute_hash_link(parent_generation_transaction_hash_link, mm2_root_hash + last_txout_nonce + '00000000')
+    
+    parent_merkle_root = execute_merkle_link(parent_merkle_link, parent_generation_transaction_hash)
+    
+    parent_block_hash = H(parent_block_header_without_merkle_root.insert_merkle_root(parent_merkle_root))
+    
+    return parent_block_hash <= target
+</pre>
 
 ==Rationale==
 

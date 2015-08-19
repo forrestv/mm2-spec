@@ -44,14 +44,14 @@ and less than a block-length of unprocessed data and Hb(s, x) finalizing the
 SHA-256 hash of the data compressed into s concatenated with x and then
 SHA-256 hashing it again to yield H(x || y).
 
-The parent block contains a "reference hash" within the scriptPubkey of the
+The parent block contains a "MM2 root hash" within the scriptPubkey of the
 last txout of its coinbase transaction.
 The scriptPubkey must be exactly:
 
-    OP_RETURN (binary tree root hash || last txout nonce)
+    OP_RETURN (MM2 root hash || last txout nonce)
 
 which serializes to 42 bytes:
-(x is the binary tree root hash, y is the last txout nonce)
+(x is the MM2 root hash, y is the last txout nonce)
 
     6a28xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyy
 
@@ -59,7 +59,8 @@ The "last txout nonce" is a freely chosen 64-bit number, which is useful as a
 nonce for Stratum mining.
 
 The serialized coinbase transaction ends with the last txout's scriptPubKey
-and then nLockTime, a 32-bit number.
+and then nLockTime, a 32-bit number, which is always 0 for the generation
+transaction.
 
 In order to achieve PoW uniqueness, a binary tree with leaf nodes being
 the H((64 0x00 bytes) || H(auxiliary data)) and non-leaf nodes being
@@ -82,15 +83,22 @@ A "merkle link" is a list of sibling hashes and a bit for each describing which 
 <pre>
 def verify_mm2_pow_proof(
         target, pow_category_hash,
+        # following data makes up MM2 proof
         parent_block_header_without_merkle_root, parent_merkle_link, parent_generation_transaction_hash_link,
         mm2_merkle_link, auxiliary_data_hash,
         last_txout_nonce):
     
     if not mm2_merkle_link.side_choices.is_prefix_of(pow_category_hash):
+        # check to make sure that auxiliary_data_hash is in the right place in
+        # the merkle tree of MM2 in order to ensure PoW uniqueness
         return False
     
     mm2_root_hash = execute_merkle_link(mm2_merkle_link, auxiliary_data_hash)
     
+    # parent_generation_transaction_hash_link is:
+    #   Ha(parent_generation_transaction up to where the "MM2 root hash" starts)
+    # We know everything after that, namely the MM2 root hash, the last txout
+    # nonce, and nLockTime (which is always 0).
     parent_generation_transaction_hash = execute_hash_link(parent_generation_transaction_hash_link, mm2_root_hash + last_txout_nonce + '00000000')
     
     parent_merkle_root = execute_merkle_link(parent_merkle_link, parent_generation_transaction_hash)

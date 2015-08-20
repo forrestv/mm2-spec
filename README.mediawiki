@@ -39,27 +39,28 @@ burden on auxiliary blockchains.
 
 ===Definitions===
 
-A "PoW" is a proof of work.
+'''PoW''': a proof of work.
 
-An "auxiliary proof of work" is a PoW that is potentially also a valid Bitcoin
-block solution.
+'''auxiliary proof of work''': a PoW of arbitrary data that is potentially also a
+valid Bitcoin block solution.
 
-H(x) is the standard double-SHA-256 hash function used by Bitcoin.
-Ha(x) and Hb(s, y) are defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
+'''H(x)''': the standard double-SHA-256 hash function used by Bitcoin.
+
+'''Ha(x) and Hb(s, y)''': defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
 producing an SHA-256 midstate augmented with the number of blocks processed
 and less than a block-length of unprocessed data and Hb(s, x) finalizing the
 SHA-256 hash of the data compressed into s concatenated with x and then
 SHA-256 hashing it again to yield H(x || y).
 
-A "hash link" is the result of the earlier defined Ha(x) function. Using a hash link, one can compute the double-SHA256 hash of a block of data from the portion of it that wasn't input to Ha(x).
+'''hash link''': the result of the earlier defined Ha(x) function. Using a hash link, one can compute the double-SHA256 hash of a block of data from the portion of it that wasn't input to Ha(x).
 
-A "Merkle link" (elsewhere called a Merkle branch) is a list of sibling hashes and a bit for each describing which side they're on. Using a Merkle link, one can compute the Merkle root of a tree from the hash of a given leaf node.
+'''Merkle link''': (elsewhere called a Merkle branch) a list of sibling hashes and a bit for each describing which side they're on. Using a Merkle link, one can compute the Merkle root of a tree from the hash of a given leaf node.
 
-An "auxiliary datum" is the datum that the PoW is building on. In Namecoin's case, it would be the Namecoin block header.
+'''auxiliary datum''': the datum that the PoW is building on. In Namecoin's case, it would be the Namecoin block header.
 
-A "context" is a realm within which a given MM2 PoW is only valid for at most one auxiliary datum. Contexts are internally represented as 256-bit numbers, which are recommended to be H(some identifying string) (e.g. H("namecoin").)
+'''context''': a realm within which a given MM2 PoW is only valid for at most one auxiliary datum. Contexts are internally represented as 256-bit numbers, which are recommended to be H(some identifying string) (e.g. H("namecoin").)
 
-"PoW uniqueness" is the property of a PoW scheme that ensures that, in a given context, a given PoW is only valid for at most one auxiliary datum.
+'''PoW uniqueness''': the property of a auxiliary PoW scheme that ensures that, in a given context, a given PoW is only valid for at most one auxiliary datum.
 
 ===Format of data included in parent chain's coinbase transaction===
 

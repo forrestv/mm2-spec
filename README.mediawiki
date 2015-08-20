@@ -14,9 +14,9 @@ of data included in the parent chain's coinbase transaction, the format of an
 auxiliary proof-of-work, and procedures to generate and validate these proofs.
 
 Of particular interest is the requirement that only one piece of auxiliary
-data per category of auxiliary data (e.g. one auxiliary block per auxiliary
+data per context (e.g. one auxiliary block per auxiliary
 chain) can have a valid auxiliary proof-of-work derived from a single parent
-proof-of-work (this concept is hereby referred to as "PoW uniqueness").
+proof-of-work (this concept is hereafter referred to as "PoW uniqueness").
 Ensuring PoW uniqueness is important in many situations because it prevents an
 unbounded number of auxiliary proof-of-works being created from one parent
 proof-of-work, which in many situations would enable at least a denial of
@@ -39,6 +39,11 @@ burden on auxiliary blockchains.
 
 ===Definitions===
 
+A "PoW" is a proof of work.
+
+An "auxiliary proof of work" is a PoW that is potentially also a valid Bitcoin
+block solution.
+
 H(x) is the standard double-SHA-256 hash function used by Bitcoin.
 Ha(x) and Hb(s, y) are defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
 producing an SHA-256 midstate augmented with the number of blocks processed
@@ -52,7 +57,7 @@ A "Merkle link" (elsewhere called a Merkle branch) is a list of sibling hashes a
 
 An "auxiliary datum" is the datum that the PoW is building on. In Namecoin's case, it would be the Namecoin block header.
 
-A "context" is one realm within which a given MM2 PoW is only valid for at most one auxiliary datum. Contexts are internally represented as 256-bit numbers, which are recommended to be H(some identifying string) (e.g. H("namecoin").)
+A "context" is a realm within which a given MM2 PoW is only valid for at most one auxiliary datum. Contexts are internally represented as 256-bit numbers, which are recommended to be H(some identifying string) (e.g. H("namecoin").)
 
 "PoW uniqueness" is the property of a PoW scheme that ensures that, in a given context, a given PoW is only valid for at most one auxiliary datum.
 
@@ -84,13 +89,12 @@ In order to achieve PoW uniqueness, a binary tree with leaf nodes being
 the H((64 0x00 bytes) || H(auxiliary datum)) and non-leaf nodes being
 H(left || right) is used to compute the binary tree root hash.
 The tree has the requirement that path to a leaf node must be a prefix of a
-predetermined choice of path for the category of auxiliary data that the leaf
-contains.
+predetermined choice of path for the context.
 For example, H("namecoin"), represented as a bit sequence with 0 meaning left
 and 1 meaning right, might be used for the mandatory path prefix of Namecoin
 blocks.
-This requirement ensures that multiple instances of a particular category of
-auxiliary data can not be within the same tree.
+This requirement ensures that multiple instances of auxiliary data for the
+same context can not be within the same tree, which is PoW uniqueness.
 
 ===Pseudocode===
 

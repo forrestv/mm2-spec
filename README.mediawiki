@@ -24,11 +24,11 @@ service attack.
 
 ==Motivation==
 
-As it stands, the current implementation of merged mining (hereby referred to
+As it stands, the current implementation of merged mining (hereafter referred to
 as MM1) requires the entire relevant coinbase transaction from the parent
 chain to be contained within the auxiliary proof-of-work.
 In addition, MM1's method of ensuring PoW uniqueness is complex and
-space-inefficient due to flaws in its merkle tree slot selection algorithm.
+space-inefficient due to flaws in its Merkle tree slot selection algorithm.
 
 This MM2 specification produces markedly shorter auxiliary proof-of-works,
 making applications such as [https://github.com/forrestv/p2pool P2Pool] and
@@ -37,12 +37,26 @@ burden on auxiliary blockchains.
 
 ==Specification==
 
+===Definitions===
+
 H(x) is the standard double-SHA-256 hash function used by Bitcoin.
 Ha(x) and Hb(s, y) are defined such that Hb(Ha(x), y) = H(x || y), with Ha(x)
 producing an SHA-256 midstate augmented with the number of blocks processed
 and less than a block-length of unprocessed data and Hb(s, x) finalizing the
 SHA-256 hash of the data compressed into s concatenated with x and then
 SHA-256 hashing it again to yield H(x || y).
+
+A "hash link" is the result of the earlier defined Ha(x) function. Using a hash link, one can compute the double-SHA256 hash of a block of data from the portion of it that wasn't input to Ha(x).
+
+A "Merkle link" (elsewhere called a Merkle branch) is a list of sibling hashes and a bit for each describing which side they're on. Using a Merkle link, one can compute the Merkle root of a tree from the hash of a given leaf node.
+
+An "auxiliary datum" is the datum that the PoW is building on. In Namecoin's case, it would be the Namecoin block header.
+
+A "context" is one realm within which a given MM2 PoW is only valid for at most one auxiliary datum. Contexts are internally represented as 256-bit numbers, which are recommended to be H(some identifying string) (e.g. H("namecoin").)
+
+"PoW uniqueness" is the property of a PoW scheme that ensures that, in a given context, a given PoW is only valid for at most one auxiliary datum.
+
+===Format of data included in parent chain's coinbase transaction===
 
 The parent block contains a "MM2 root hash" within the scriptPubkey of the
 last txout of its coinbase transaction.
@@ -62,8 +76,12 @@ The serialized coinbase transaction ends with the last txout's scriptPubKey
 and then nLockTime, a 32-bit number, which is always 0 for the generation
 transaction.
 
+Everything else about the parent chain's generation transaction is unconstrained.
+
+===Calculation of MM2 root hash===
+
 In order to achieve PoW uniqueness, a binary tree with leaf nodes being
-the H((64 0x00 bytes) || H(auxiliary data)) and non-leaf nodes being
+the H((64 0x00 bytes) || H(auxiliary datum)) and non-leaf nodes being
 H(left || right) is used to compute the binary tree root hash.
 The tree has the requirement that path to a leaf node must be a prefix of a
 predetermined choice of path for the category of auxiliary data that the leaf
@@ -75,10 +93,6 @@ This requirement ensures that multiple instances of a particular category of
 auxiliary data can not be within the same tree.
 
 ===Pseudocode===
-
-A "hash link" is the result of the earlier defined Ha(x) function. Using a hash link, one can compute the double-SHA256 hash of a block of data from the portion of it that wasn't input to Ha(x).
-
-A "merkle link" is a list of sibling hashes and a bit for each describing which side they're on. Using a merkle link, one can compute the merkle root of a tree from the hash of a given leaf node.
 
 <pre>
 def verify_mm2_pow_proof(
